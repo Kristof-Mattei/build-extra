@@ -65,13 +65,22 @@ sdk () {
 		'') break;;
 		-*) sdk die "Unknown option: %s\n" "$1"; return 1;;
 		esac; do shift; done &&
+		{ cat >"$TMP/get-desktop-location.vbs" <<-\EOF
+		Dim objShell
+		Dim strPath
 
+		Set objShell = Wscript.CreateObject("Wscript.Shell")
+		strPath = objShell.SpecialFolders("Desktop")
+		wscript.echo strPath
+		EOF
+		} &&
+		path_to_desktop=$(cscript //nologo $TMP/get-desktop-location.vbs) &&
 		case "$(uname -m)" in
 		i686) bitness=" 32-bit";;
 		x86_64) bitness=" 64-bit";;
 		*) bitness=;;
 		esac &&
-		desktop_icon_path="$USERPROFILE/Desktop/Git SDK$bitness.lnk" &&
+		desktop_icon_path="$path_to_desktop/Git SDK$bitness.lnk" &&
 		if test -n "$force" || test ! -f "$desktop_icon_path"
 		then
 			create-shortcut.exe --icon-file /msys2.ico --work-dir \
